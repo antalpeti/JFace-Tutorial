@@ -78,7 +78,8 @@ public class TableViewerDemo {
     compositeTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
     compositeTable.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-    TableViewer tableViewer = new TableViewer(compositeTable, SWT.BORDER | SWT.FULL_SELECTION);
+    TableViewer tableViewer =
+        new TableViewer(compositeTable, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI);
 
     // Content Provider & Label Provider.
     tableViewer.setContentProvider(new ArticleTableCLProvider());
@@ -123,6 +124,7 @@ public class TableViewerDemo {
     btnPublished.setText("Published");
 
     Button btnAdd = new Button(compositeAdd, SWT.NONE);
+    btnAdd.setToolTipText("Add new row to the table");
     btnAdd.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
     btnAdd.addSelectionListener(new SelectionAdapter() {
       @Override
