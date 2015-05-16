@@ -12,11 +12,15 @@ package org.eclipse.jface.snippets.viewers;
 
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 
 /**
  * A simple TableViewer implementation to demonstrate its usage
@@ -57,9 +61,23 @@ public class Snippet001TableViewer {
     // for demonstration purposes use custom content provider
     // alternatively you could use ArrayContentProvider.getInstance()
     v.setContentProvider(new MyContentProvider());
+    // v.setContentProvider(ArrayContentProvider.getInstance());
     MyModel[] model = createModel();
     v.setInput(model);
     v.getTable().setLinesVisible(true);
+    v.getTable().setHeaderVisible(true);
+
+    TableLayout ad = new TableLayout();
+    TableColumn column1 = createTableColumn(v.getTable(), "Column 1");
+    TableColumn column2 = createTableColumn(v.getTable(), "Column 2");
+  }
+
+  private TableColumn createTableColumn(Table table, String textColumn) {
+    TableColumn column = new TableColumn(table, SWT.NONE);
+    column.setText(textColumn);
+    column.setWidth(200);
+    column.setMoveable(true);
+    return column;
   }
 
   private MyModel[] createModel() {
