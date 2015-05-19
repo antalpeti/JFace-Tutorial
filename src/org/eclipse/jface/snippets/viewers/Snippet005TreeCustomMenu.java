@@ -100,7 +100,7 @@ public class Snippet005TreeCustomMenu {
     v.setContentProvider(new MyContentProvider());
     v.setInput(createModel());
 
-    final Action a = new Action("") {};
+    // final Action a = new Action("") {};
     final MenuManager mgr = new MenuManager();
     mgr.setRemoveAllWhenShown(true);
 
@@ -110,8 +110,11 @@ public class Snippet005TreeCustomMenu {
       public void menuAboutToShow(IMenuManager manager) {
         IStructuredSelection selection = (IStructuredSelection) v.getSelection();
         if (!selection.isEmpty()) {
-          a.setText("Action for " + ((MyModel) selection.getFirstElement()).toString());
-          mgr.add(a);
+          for (Object o : selection.toList()) {
+            mgr.add(new Action("Action for " + ((MyModel) o).toString()) {});
+          }
+          // a.setText("Action for " + ((MyModel) selection.getFirstElement()).toString());
+          // mgr.add(a);
         }
       }
     });
