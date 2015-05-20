@@ -1,12 +1,23 @@
 package workouts;
 
+import java.io.File;
+import java.util.ArrayList;
+
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ListViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
@@ -17,6 +28,11 @@ public class MainWindow {
 
   protected Shell shlFileManipulator;
   private Text textSelectedDirectory;
+  private ListViewer listViewerFiles;
+  private Button btnRename;
+  private Button btnDelete;
+  private Button btnDuplicate;
+  private Button btnPreview;
 
   /**
    * Launch the application.
@@ -38,6 +54,8 @@ public class MainWindow {
   public void open() {
     Display display = Display.getDefault();
     createContents();
+    shlFileManipulator.open();
+    shlFileManipulator.layout();
     while (!shlFileManipulator.isDisposed()) {
       if (!display.readAndDispatch()) {
         display.sleep();
@@ -50,57 +68,141 @@ public class MainWindow {
    */
   protected void createContents() {
     shlFileManipulator = new Shell();
+    shlFileManipulator.setSize(450, 300);
+    shlFileManipulator.setText("File Manipulator");
     shlFileManipulator.setLayout(new FillLayout(SWT.HORIZONTAL));
 
     Composite compositeParent = new Composite(shlFileManipulator, SWT.NONE);
     compositeParent.setLayout(new GridLayout(2, false));
 
-    Composite compositeFiles = new Composite(compositeParent, SWT.NONE);
-    compositeFiles.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
-    compositeFiles.setLayout(new GridLayout(1, false));
+    Composite compositeFile = new Composite(compositeParent, SWT.NONE);
+    compositeFile.setLayout(new GridLayout(1, false));
+    compositeFile.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
-    Label lblSelectedDirectory = new Label(compositeFiles, SWT.NONE);
-    lblSelectedDirectory.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+    Label lblSelectedDirectory = new Label(compositeFile, SWT.NONE);
     lblSelectedDirectory.setText("Selected Directory:");
 
-    textSelectedDirectory = new Text(compositeFiles, SWT.BORDER);
+    textSelectedDirectory = new Text(compositeFile, SWT.BORDER);
     textSelectedDirectory.setEnabled(false);
     textSelectedDirectory.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
 
-    ListViewer listViewer = new ListViewer(compositeFiles, SWT.BORDER | SWT.V_SCROLL);
-    List list = listViewer.getList();
-    list.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+    listViewerFiles =
+        new ListViewer(compositeFile, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI);
+    listViewerFiles.setContentProvider(new ArrayContentProvider());
+    listViewerFiles.setLabelProvider(new ILabelProvider() {
+
+      @Override
+      public void removeListener(ILabelProviderListener listener) {
+
+      }
+
+      @Override
+      public boolean isLabelProperty(Object element, String property) {
+        return false;
+      }
+
+      @Override
+      public void dispose() {
+
+      }
+
+      @Override
+      public void addListener(ILabelProviderListener listener) {
+
+      }
+
+      @Override
+      public String getText(Object element) {
+        return ((File) element).getName();
+      }
+
+      @Override
+      public Image getImage(Object element) {
+        return null;
+      }
+    });
+    List listFiles = listViewerFiles.getList();
+    listFiles.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        IStructuredSelection selection = (IStructuredSelection) listViewerFiles.getSelection();
+        if (selection.size() == 1) {
+          btnRename.setEnabled(true);
+          btnDelete.setEnabled(true);
+          btnDuplicate.setEnabled(true);
+          btnPreview.setEnabled(true);
+        } else if (selection.size() == 0) {
+          btnRename.setEnabled(false);
+          btnDelete.setEnabled(false);
+          btnDuplicate.setEnabled(false);
+          btnPreview.setEnabled(false);
+        } else if (selection.size() > 1) {
+          btnRename.setEnabled(false);
+          btnDuplicate.setEnabled(false);
+          btnPreview.setEnabled(false);
+        }
+      }
+    });
+    listFiles.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
 
     Composite compositeBtn = new Composite(compositeParent, SWT.NONE);
     compositeBtn.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, false, 1, 1));
-    compositeBtn.setSize(225, 270);
     compositeBtn.setLayout(new GridLayout(1, false));
     new Label(compositeBtn, SWT.NONE);
 
     Button btnBrowse = new Button(compositeBtn, SWT.NONE);
+    btnBrowse.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        String oldDir = textSelectedDirectory.getText();
+        DirectoryDialog dlg = new DirectoryDialog(shlFileManipulator);
+        String selectedDirectory = dlg.open();
+        if (selectedDirectory != null && !selectedDirectory.equals(oldDir)) {
+          textSelectedDirectory.setText(selectedDirectory);
+          File dir = new File(selectedDirectory);
+          ArrayList<File> files = new ArrayList<>();
+          for (File file : dir.listFiles()) {
+            if (file.isFile()) {
+              files.add(file);
+            }
+          }
+          listViewerFiles.setInput(files);
+        }
+      }
+    });
     btnBrowse.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
+    btnBrowse.setBounds(0, 0, 75, 25);
     btnBrowse.setText("Browse...");
     new Label(compositeBtn, SWT.NONE);
 
-    Button btnRename = new Button(compositeBtn, SWT.NONE);
+    btnRename = new Button(compositeBtn, SWT.NONE);
+    btnRename.setEnabled(false);
     btnRename.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
     btnRename.setText("Rename");
 
-    Button btnDelete = new Button(compositeBtn, SWT.NONE);
+    btnDelete = new Button(compositeBtn, SWT.NONE);
+    btnDelete.setEnabled(false);
     btnDelete.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
     btnDelete.setText("Delete");
 
-    Button btnDuplicate = new Button(compositeBtn, SWT.NONE);
+    btnDuplicate = new Button(compositeBtn, SWT.NONE);
+    btnDuplicate.setEnabled(false);
     btnDuplicate.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
     btnDuplicate.setText("Duplicate");
-    new Label(compositeBtn, SWT.NONE);
 
-    Button btnPreview = new Button(compositeBtn, SWT.NONE);
+    btnPreview = new Button(compositeBtn, SWT.NONE);
+    btnPreview.setEnabled(false);
     btnPreview.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
     btnPreview.setText("Preview");
     new Label(compositeBtn, SWT.NONE);
 
     Button btnExit = new Button(compositeBtn, SWT.NONE);
+    btnExit.addSelectionListener(new SelectionAdapter() {
+      @Override
+      public void widgetSelected(SelectionEvent e) {
+        shlFileManipulator.dispose();
+      }
+    });
     btnExit.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1));
     btnExit.setText("Exit");
 
