@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.ILabelProviderListener;
@@ -198,7 +199,13 @@ public class MainWindow {
                 .getName(), null);
         dlg.open();
         String newFileName = dlg.getValue();
-
+        File newFile = new File(file.getParent() + "\\" + newFileName);
+        boolean success = file.renameTo(newFile);
+        if (!success) {
+          MessageDialog.openError(shlFileManipulator, "Error", "Wrong filename!");
+        } else {
+          listViewerFiles.refresh(true);
+        }
       }
     });
     btnRename.setEnabled(false);
